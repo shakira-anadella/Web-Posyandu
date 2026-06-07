@@ -21,10 +21,13 @@
                 </div>
             </div>
 
-            <!-- Logout (sementara dummy) -->
-            <a href="#" class="px-4 py-2 rounded-xl text-sm bg-slate-100 hover:bg-slate-200">
-                Logout
-            </a>
+            <!-- Tombol Logout Aktif Khusus Kader -->
+            <form action="{{ url('/logout') }}" method="POST" class="inline-block">
+                @csrf
+                <button type="submit" class="px-4 py-2 rounded-xl text-sm bg-red-50 font-semibold text-red-600 hover:bg-red-100 transition duration-200">
+                    Logout
+                </button>
+            </form>
         </div>
     </header>
 
@@ -44,6 +47,12 @@
             class="py-3 text-sm font-medium border-b-2 
             {{ request()->is('balita*') ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-600 hover:text-slate-900' }}">
                 Data Balita
+            </a>
+
+            <a href="{{ url('/laporan/bulanan') }}" target="_blank"
+            class="py-3 text-sm font-medium border-b-2 
+            {{ request()->is('laporan/bulanan*') ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-600 hover:text-slate-900' }}">
+                Laporan Bulanan
             </a>
 
         </div>

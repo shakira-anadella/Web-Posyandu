@@ -1,65 +1,74 @@
-import pickle
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+import pickle
 import numpy as np
-import os
+import pandas as pd
 
-app = FastAPI(title="Mesin Prediksi Stunting & Gizi Balita - Random Forest")
+app = FastAPI(
+    title="API Status Gizi Balita (XGBoost Multi-Output)",
+    version="1.0"
+)
 
-# Alamat file model .pkl di dalam folder fastapi-server
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_BBU_PATH  = os.path.join(BASE_DIR, "model_bbu.pkl")
-MODEL_TBU_PATH  = os.path.join(BASE_DIR, "model_tbu.pkl")
-MODEL_BBTB_PATH = os.path.join(BASE_DIR, "model_bbtb.pkl")
-
-# Amankan proses loading model saat server pertama kali menyala
+# =========================================================================
+# 1. LOAD MODEL, SCALER, DAN PEMETAAN LABEL KEMENKES
+# =========================================================================
 try:
-    with open(MODEL_BBU_PATH, "rb") as f:
-        model_bbu = pickle.load(f)
-    with open(MODEL_TBU_PATH, "rb") as f:
-        model_tbu = pickle.load(f)
-    with open(MODEL_BBTB_PATH, "rb") as f:
-        model_bbtb = pickle.load(f)
-    print("🚀 SUKSES: Semua model Random Forest (.pkl) berhasil dimuat!")
+    model_bbu = pickle.load(open("models/xgb_model_bbu.pkl", "rb"))
+    model_tbu = pickle.load(open("models/xgb_model_tbu.pkl", "rb"))
+    model_bbtb = pickle.load(open("models/xgb_model_bbtb.pkl", "rb"))
+    scaler = pickle.load(open("models/scaler_antropometri.pkl", "rb"))
+    print("🚀 Berhasil memuat seluruh Model XGBoost dan Scaler!")
 except Exception as e:
-    print(f"❌ EROR: Gagal memuat file .pkl. Pastikan nama file sesuai! Pesan eror: {str(e)}")
+    print(f"❌ Gagal memuat file model. Periksa path folder! Eror: {str(e)}")
 
-# Struktur data input yang dikirim dari Laravel
+# Pemetaan angka prediksi kembali ke teks medis resmi Kemenkes
+LABEL_BBU = {0: "Gizi Buruk", 1: "Gizi Kurang", 2: "Gizi Baik", 3: "Gizi Lebih"}
+LABEL_TBU = {0: "Sangat Pendek (Severely Stunting)", 1: "Pendek (Stunting)", 2: "Normal", 3: "Tinggi"}
+LABEL_BBTB = {0: "Gizi Buruk (Severely Wasting)", 1: "Gizi Kurang (Wasting)", 2: "Gizi Baik (Normal)", 3: "Berisiko Gizi Lebih", 4: "Gizi Lebih"}
+
+# =========================================================================
+# 2. DEFINISI STRUKTUR INPUT DATA (Pydantic Model)
+# =========================================================================
 class DataBalitaInput(BaseModel):
-    umur_bulan: int
-    jenis_kelamin: str  # "L" atau "P"
+    jk: str           # Menerima teks 'L' atau 'P' dari Laravel
+    usia_bulan: float # Menerima total angka bulan hasil konversi
     berat_badan: float
     tinggi_badan: float
 
-@app.get("/")
-def home():
-    return {"status": "Server FastAPI Aktif", "algoritma": "Random Forest Multi-Output"}
-
-@app.post("/predict")
-def predict_gizi(data: DataBalitaInput):
+# =========================================================================
+# 3. ENDPOINT API PREDIKSI
+# =========================================================================
+@app.post("/api/predict-gizi")
+async def prediksi_status_gizi(data: DataBalitaInput):
     try:
-        # 1. Konversi jenis kelamin ke angka (sesuaikan dengan codingan Google Colab Anda)
-        # Umumnya: Laki-laki = 1, Perempuan = 0 (atau sebaliknya)
-        jk_numeric = 1 if data.jenis_kelamin.upper() == "L" else 0
+        # A. Encoding Jenis Kelamin (L -> 0, P -> 1)
+        jk_encoded = 0 if data.jk.upper() == 'L' else 1
         
-        # 2. Susun fitur input sesuai urutan saat Anda melatih model di Colab
-        # Contoh urutan standar: [umur_bulan, jenis_kelamin, berat_badan, tinggi_badan]
-        fitur = np.array([[data.umur_bulan, jk_numeric, data.berat_badan, data.tinggi_badan]])
+        # B. Susun sesuai urutan fitur data latih: ['JK', 'Usia Saat Ukur', 'Berat', 'Tinggi']
+        fitur_mentah = np.array([[jk_encoded, data.usia_bulan, data.berat_badan, data.tinggi_badan]])
         
-        # 3. Eksekusi prediksi ke 3 model terpisah
-        pred_bbu  = model_bbu.predict(fitur)[0]
-        pred_tbu  = model_tbu.predict(fitur)[0]
-        pred_bbtb = model_bbtb.predict(fitur)[0]
+        # C. Standardisasi fitur numerik menggunakan scaler bawaan (.pkl)
+        df_fitur = pd.DataFrame(fitur_mentah, columns=['JK', 'Usia Saat Ukur', 'Berat', 'Tinggi'])
+        df_fitur[['Usia Saat Ukur', 'Berat', 'Tinggi']] = scaler.transform(df_fitur[['Usia Saat Ukur', 'Berat', 'Tinggi']])
         
-        # 4. Kembalikan hasil prediksi dalam bentuk JSON ke Laravel
+        # D. Eksekusi Prediksi Paralel ke 3 Model
+        pred_bbu_code = int(model_bbu.predict(df_fitur)[0])
+        pred_tbu_code = int(model_tbu.predict(df_fitur)[0])
+        pred_bbtb_code = int(model_bbtb.predict(df_fitur)[0])
+        
+        # E. Ambil teks hasil mapping
+        hasil_bbu = LABEL_BBU.get(pred_bbu_code, "Tidak Diketahui")
+        hasil_tbu = LABEL_TBU.get(pred_tbu_code, "Tidak Diketahui")
+        hasil_bbtb = LABEL_BBTB.get(pred_bbtb_code, "Tidak Diketahui")
+        
         return {
             "status": "success",
-            "hasil": {
-                "bbu": str(pred_bbu),   # Berat Badan menurut Umur
-                "tbu": str(pred_tbu),   # Tinggi Badan menurut Umur (Indikator Stunting)
-                "bbtb": str(pred_bbtb)  # Berat Badan menurut Tinggi Badan
+            "hasil_diagnosis": {
+                "bbu": hasil_bbu,
+                "tbu_stunting": hasil_tbu,
+                "bbtb_wasting": hasil_bbtb
             }
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Gagal melakukan prediksi: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Eror komputasi server AI: {str(e)}")

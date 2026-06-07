@@ -14,65 +14,76 @@ class DashboardController extends Controller
         $totalBalita = Balita::count();
         $totalPenimbangan = Penimbangan::count();
 
-        // Ambil penimbangan terbaru per balita
+        // 1. Ambil ID penimbangan terbaru per balita (Subquery)
         $latest = Penimbangan::select('balita_id', DB::raw('MAX(id) as max_id'))
             ->groupBy('balita_id');
 
-        // PERBAIKAN 1: Hitung status gizi berdasarkan penimbangan terakhir menggunakan kolom 'status_bbu'
-        $statusCounts = Penimbangan::joinSub($latest, 'latest', function ($join) {
-                $join->on('penimbangans.id', '=', 'latest.max_id');
-            })
-            ->select('status_bbu', DB::raw('COUNT(*) as total'))
-            ->groupBy('status_bbu')
-            ->pluck('total', 'status_bbu'); 
-
-        // Urutan 6 kelas (selalu tampil walau 0)
-        $kelas = [
-            'Gizi Buruk',
-            'Gizi Kurang',
-            'Normal',
-            'Risiko Gizi Lebih',
-            'Gizi Lebih',
-            'Obesitas',
-        ];
-
-        $map = array_fill_keys($kelas, 0);
-
-        foreach ($statusCounts as $status => $total) {
-            if (isset($map[$status])) {
-                $map[$status] = (int) $total;
-            }
-        }
-
-        $donutLabels = array_keys($map);
-        $donutValues = array_values($map);
-
-        // Daftar balita
-        $balitas = Balita::orderBy('nama_balita')->get();
-
-        // Ambil record penimbangan terbaru lengkap (bb/tb/umur/status)
+        // 2. Ambil record penimbangan terbaru lengkap untuk semua balita
         $latestRows = Penimbangan::joinSub($latest, 'latest', function($join){
                 $join->on('penimbangans.id', '=', 'latest.max_id');
             })
             ->get()
             ->keyBy('balita_id');
 
-        // PERBAIKAN 2: Tempel data terakhir ke tiap balita menggunakan kolom baru untuk dibaca blade
+        // ==========================================
+        // 📊 PROSES REKAPITULASI DATA UNTUK 3 GRAFIK
+        // ==========================================
+
+        // --- A. Rekap Indikator BB/U ---
+        $kelasBBU = ['Sangat Kurang', 'Kurang', 'Normal', 'Risiko BB Lebih'];
+        $mapBBU = array_fill_keys($kelasBBU, 0);
+        foreach ($latestRows as $row) {
+            if ($row->status_bbu && isset($mapBBU[$row->status_bbu])) {
+                $mapBBU[$row->status_bbu]++;
+            }
+        }
+        $bbuLabels = array_keys($mapBBU);
+        $bbuValues = array_values($mapBBU);
+
+        // --- B. Rekap Indikator TB/U (Stunting) ---
+        $kelasTBU = ['Sangat Pendek', 'Pendek', 'Normal', 'Tinggi'];
+        $mapTBU = array_fill_keys($kelasTBU, 0);
+        foreach ($latestRows as $row) {
+            if ($row->status_tbu && isset($mapTBU[$row->status_tbu])) {
+                $mapTBU[$row->status_tbu]++;
+            }
+        }
+        $tbuLabels = array_keys($mapTBU);
+        $tbuValues = array_values($mapTBU);
+
+        // --- C. Rekap Indikator BB/TB (Nutrisi) ---
+        $kelasBBTB = ['Gizi Buruk', 'Gizi Kurang', 'Normal', 'Risiko Gizi Lebih', 'Gizi Lebih', 'Obesitas'];
+        $mapBBTB = array_fill_keys($kelasBBTB, 0);
+        foreach ($latestRows as $row) {
+            if ($row->status_bbtb && isset($mapBBTB[$row->status_bbtb])) {
+                $mapBBTB[$row->status_bbtb]++;
+            }
+        }
+        $bbtbLabels = array_keys($mapBBTB);
+        $bbtbValues = array_values($mapBBTB);
+
+        // ==========================================
+        // 📋 PEMETAAN DATA UNTUK TABEL DAFTAR BALITA
+        // ==========================================
+        $balitas = Balita::orderBy('nama_balita')->get();
+
         foreach ($balitas as $b) {
             $p = $latestRows->get($b->id);
 
             $b->tgl_terakhir = $p?->tanggal_penimbangan;
             $b->umur_terakhir = $p?->umur_bulan;
-            $b->status_bbu = $p?->status_bbu; // Menyesuaikan dengan variabel baru di blade dashboard
+            $b->status_bbu = $p?->status_bbu;   // Status Berat Badan
+            $b->status_tbu = $p?->status_tbu;   // Status Tinggi Badan (Stunting)
+            $b->status_bbtb = $p?->status_bbtb; // Status Nutrisi klinis
         }
 
         return view('dashboard', compact(
             'totalBalita',
             'totalPenimbangan',
             'balitas',
-            'statusCounts',
-            'donutLabels',
-            'donutValues',
+            'bbuLabels', 'bbuValues',
+            'tbuLabels', 'tbuValues',
+            'bbtbLabels', 'bbtbValues'
         ));
     }
 
@@ -96,7 +107,6 @@ class DashboardController extends Controller
             'jenis_kelamin' => $request->jenis_kelamin,
         ]);
 
-        // PERBAIKAN 3: Membunkus redirect dengan helper url() agar jalur local tidak pecah
         return redirect(url('/dashboard'))->with('success', 'Data balita berhasil ditambahkan.');
     }
 }

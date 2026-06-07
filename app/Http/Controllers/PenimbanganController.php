@@ -47,13 +47,13 @@ class PenimbanganController extends Controller
         }
 
         // =========================================================================
-        // JEMBATAN PENGHUBUNG INTEGRASI KE FASTAPI PYTHON (RANDOM FOREST)
+        // JEMBATAN PENGHUBUNG INTEGRASI KE FASTAPI PYTHON (XGBOOST MULTI-OUTPUT)
         // =========================================================================
         try {
-            // Kita tembak url uvicorn port 8000 dengan membawa paket data balita
-            $response = Http::timeout(5)->post('http://127.0.0.1:8000/predict', [
-                'umur_bulan' => (int) $umur_bulan,
-                'jenis_kelamin' => $balita->jenis_kelamin, // Mengirim data "L" or "P"
+            // Kita tembak url uvicorn port 8000 dengan struktur data XGBoost Baru
+            $response = Http::timeout(5)->post('http://127.0.0.1:8000/api/predict-gizi', [
+                'jk' => $balita->jenis_kelamin,               // Mengirim 'L' atau 'P'
+                'usia_bulan' => (float) $umur_bulan,          // Wajib float sesuai Pydantic FastAPI
                 'berat_badan' => (float) $request->berat_badan,
                 'tinggi_badan' => (float) $request->tinggi_badan,
             ]);
@@ -61,27 +61,27 @@ class PenimbanganController extends Controller
             if ($response->successful()) {
                 $result = $response->json();
                 
-                // Tangkap 3 hasil klasifikasi dari respon JSON FastAPI Python
-                $hasil_bbu  = $result['hasil']['bbu'];
-                $hasil_tbu  = $result['hasil']['tbu'];
-                $hasil_bbtb = $result['hasil']['bbtb'];
+                // Tangkap 3 hasil klasifikasi XGBoost dari respon JSON FastAPI Python
+                $hasil_bbu  = $result['hasil_diagnosis']['bbu'];
+                $hasil_tbu  = $result['hasil_diagnosis']['tbu_stunting'];
+                $hasil_bbtb = $result['hasil_diagnosis']['bbtb_wasting'];
             } else {
                 $riwayat = Penimbangan::where('balita_id', $id)->orderByDesc('tanggal_penimbangan')->get();
                 return view('penimbangan', [
                     'balita' => $balita,
                     'riwayat' => $riwayat,
-                    'error' => 'Server FastAPI AI merespon, tapi gagal mengeluarkan hasil prediksi.',
+                    'error' => 'Server FastAPI AI merespon, tapi gagal mengeluarkan hasil prediksi XGBoost.',
                     'input' => $request->only(['tanggal_penimbangan','berat_badan','tinggi_badan']),
                 ]);
             }
 
         } catch (\Exception $e) {
-            // Proteksi cadangan jika Anda lupa menyalakan server uvicorn Python di terminal
+            // Proteksi jika lupa menyalakan server uvicorn Python di terminal
             $riwayat = Penimbangan::where('balita_id', $id)->orderByDesc('tanggal_penimbangan')->get();
             return view('penimbangan', [
                 'balita' => $balita,
                 'riwayat' => $riwayat,
-                'error' => 'Gagal terhubung ke Mesin AI. Pastikan server FastAPI sudah menyala di terminal! (Pesan: ' . $e->getMessage() . ')',
+                'error' => 'Gagal terhubung ke Mesin AI XGBoost. Pastikan server FastAPI sudah menyala di terminal! (Pesan: ' . $e->getMessage() . ')',
                 'input' => $request->only(['tanggal_penimbangan','berat_badan','tinggi_badan']),
             ]);
         }
@@ -133,7 +133,7 @@ class PenimbanganController extends Controller
                 ->with('error', 'Penimbangan untuk bulan ini sudah ada. Hanya boleh 1 kali penimbangan per bulan.');
         }
 
-        // PERBAIKAN: Bersih total dari kolom 'status_gizi' lama
+        // Simpan data diagnosis final hasil prediksi XGBoost ke database MySQL
         Penimbangan::create([
             'balita_id'           => $id,
             'tanggal_penimbangan' => $request->tanggal_penimbangan,
@@ -142,9 +142,27 @@ class PenimbanganController extends Controller
             'tinggi_badan'        => $request->tinggi_badan,
             'status_bbu'          => $request->status_bbu,   // Kolom BB/U
             'status_tbu'          => $request->status_tbu,   // Kolom TB/U (Stunting)
-            'status_bbtb'         => $request->status_bbtb,  // Kolom BB/TB (Nutrisi)
+            'status_bbtb'         => $request->status_bbtb,  // Kolom BB/TB (Wasting)
         ]);
 
         return redirect(url('/balita/'.$id.'/timbang'))->with('success', 'Data penimbangan dan status gizi berhasil disimpan.');
+    }
+
+    public function cetakBulanan(Request $request)
+    {
+        // Mengambil filter bulan dan tahun dari input, default-nya bulan & tahun sekarang
+        $bulan = $request->input('bulan', date('m'));
+        $tahun = $request->input('tahun', date('Y'));
+
+        // Ambil data penimbangan semua balita pada bulan dan tahun tersebut
+        $riwayat = Penimbangan::with('balita')
+            ->whereYear('tanggal_penimbangan', $tahun)
+            ->whereMonth('tanggal_penimbangan', $bulan)
+            ->get();
+
+        // Nama bulan untuk judul laporan
+        $nama_bulan = \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F');
+
+        return view('cetak_bulanan', compact('riwayat', 'nama_bulan', 'bulan', 'tahun'));
     }
 }

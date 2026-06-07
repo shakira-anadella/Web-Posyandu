@@ -108,7 +108,7 @@
 
             @if(isset($hasil_bbu) && isset($hasil_tbu) && isset($hasil_bbtb))
                 <div class="mt-5 rounded-2xl border border-slate-200 bg-white p-4 space-y-4">
-                    <div class="text-sm font-semibold text-black border-b border-slate-100 pb-2">Hasil Klasifikasi Random Forest</div>
+                    <div class="text-sm font-semibold text-black border-b border-slate-100 pb-2">Hasil Klasifikasi XGBoost Optimal</div>
                     
                     <div class="grid grid-cols-3 gap-2 text-center">
                         <div class="bg-slate-50 border border-slate-100 p-2 rounded-xl">
