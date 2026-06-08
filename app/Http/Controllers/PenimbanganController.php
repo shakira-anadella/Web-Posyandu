@@ -46,25 +46,22 @@ class PenimbanganController extends Controller
             ]);
         }
 
-        // =========================================================================
-        // JEMBATAN PENGHUBUNG INTEGRASI KE FASTAPI PYTHON (XGBOOST MULTI-OUTPUT)
-        // =========================================================================
         try {
-            // Kita tembak url uvicorn port 8000 dengan struktur data XGBoost Baru
-            $response = Http::timeout(5)->post('http://127.0.0.1:8000/api/predict-gizi', [
+            // 🔄 DISESUAIKAN: Menembak route URL default FastAPI baru
+            $response = Http::timeout(5)->post('http://127.0.0.1:8000/predict', [
                 'jk' => $balita->jenis_kelamin,               // Mengirim 'L' atau 'P'
-                'usia_bulan' => (float) $umur_bulan,          // Wajib float sesuai Pydantic FastAPI
-                'berat_badan' => (float) $request->berat_badan,
-                'tinggi_badan' => (float) $request->tinggi_badan,
+                'usia_ukur' => (float) $umur_bulan,           // Menyesuaikan nama variabel baru FastAPI
+                'berat' => (float) $request->berat_badan,     // Menyesuaikan nama variabel baru FastAPI
+                'tinggi' => (float) $request->tinggi_badan,   // Menyesuaikan nama variabel baru FastAPI
             ]);
 
             if ($response->successful()) {
                 $result = $response->json();
                 
-                // Tangkap 3 hasil klasifikasi XGBoost dari respon JSON FastAPI Python
-                $hasil_bbu  = $result['hasil_diagnosis']['bbu'];
-                $hasil_tbu  = $result['hasil_diagnosis']['tbu_stunting'];
-                $hasil_bbtb = $result['hasil_diagnosis']['bbtb_wasting'];
+                // 🔄 DISESUAIKAN: Menangkap struktur key JSON hasil optimasi Bayesian baru
+                $hasil_bbu  = $result['hasil']['bbu'];
+                $hasil_tbu  = $result['hasil']['tbu'];
+                $hasil_bbtb = $result['hasil']['bbtb'];
             } else {
                 $riwayat = Penimbangan::where('balita_id', $id)->orderByDesc('tanggal_penimbangan')->get();
                 return view('penimbangan', [
@@ -76,7 +73,6 @@ class PenimbanganController extends Controller
             }
 
         } catch (\Exception $e) {
-            // Proteksi jika lupa menyalakan server uvicorn Python di terminal
             $riwayat = Penimbangan::where('balita_id', $id)->orderByDesc('tanggal_penimbangan')->get();
             return view('penimbangan', [
                 'balita' => $balita,
@@ -85,7 +81,6 @@ class PenimbanganController extends Controller
                 'input' => $request->only(['tanggal_penimbangan','berat_badan','tinggi_badan']),
             ]);
         }
-        // =========================================================================
 
         $riwayat = Penimbangan::where('balita_id', $id)->orderByDesc('tanggal_penimbangan')->get();
 

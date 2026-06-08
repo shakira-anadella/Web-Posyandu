@@ -107,21 +107,26 @@
             </form>
 
             @if(isset($hasil_bbu) && isset($hasil_tbu) && isset($hasil_bbtb))
-                <div class="mt-5 rounded-2xl border border-slate-200 bg-white p-4 space-y-4">
-                    <div class="text-sm font-semibold text-black border-b border-slate-100 pb-2">Hasil Klasifikasi XGBoost Optimal</div>
+                <div class="mt-5 rounded-2xl border border-slate-200 bg-white p-5 space-y-4 shadow-sm">
+                    <div class="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-2">
+                        <span class="flex h-2 w-2 rounded-full bg-green-500"></span>
+                        Hasil Klasifikasi Otak AI XGBoost (Optimasi Bayesian)
+                    </div>
                     
-                    <div class="grid grid-cols-3 gap-2 text-center">
-                        <div class="bg-slate-50 border border-slate-100 p-2 rounded-xl">
-                            <div class="text-[10px] uppercase tracking-wider font-semibold text-slate-400">BB/U (Berat/Umur)</div>
-                            <div class="mt-1 text-sm font-bold text-slate-800">{{ $hasil_bbu }}</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+                        <div class="p-3 rounded-xl border {{ Str::contains(strtolower($hasil_bbu), 'normal') ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800' }}">
+                            <div class="text-[10px] uppercase tracking-widest font-bold opacity-70">BB/U (Berat / Umur)</div>
+                            <div class="mt-1 text-sm font-extrabold">{{ $hasil_bbu }}</div>
                         </div>
-                        <div class="bg-slate-50 border border-slate-100 p-2 rounded-xl">
-                            <div class="text-[10px] uppercase tracking-wider font-semibold text-slate-400">TB/U (Stunting)</div>
-                            <div class="mt-1 text-sm font-bold text-slate-800">{{ $hasil_tbu }}</div>
+
+                        <div class="p-3 rounded-xl border {{ Str::contains(strtolower($hasil_tbu), 'normal') ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800' }}">
+                            <div class="text-[10px] uppercase tracking-widest font-bold opacity-70">TB/U (Tinggi / Umur)</div>
+                            <div class="mt-1 text-sm font-extrabold">{{ $hasil_tbu }}</div>
                         </div>
-                        <div class="bg-slate-50 border border-slate-100 p-2 rounded-xl">
-                            <div class="text-[10px] uppercase tracking-wider font-semibold text-slate-400">BB/TB (Nutrisi)</div>
-                            <div class="mt-1 text-sm font-bold text-slate-800">{{ $hasil_bbtb }}</div>
+
+                        <div class="p-3 rounded-xl border {{ Str::contains(strtolower($hasil_bbtb), 'gizi baik') || Str::contains(strtolower($hasil_bbtb), 'normal') ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800' }}">
+                            <div class="text-[10px] uppercase tracking-widest font-bold opacity-70">BB/TB (Status Nutrisi)</div>
+                            <div class="mt-1 text-sm font-extrabold">{{ $hasil_bbtb }}</div>
                         </div>
                     </div>
 
@@ -136,8 +141,8 @@
                         <input type="hidden" name="status_bbtb" value="{{ $hasil_bbtb }}">
 
                         <button type="submit"
-                                class="w-full inline-flex items-center justify-center px-6 py-2.5 rounded-2xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm">
-                            Simpan Hasil Timbangan
+                                class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-md">
+                            Simpan Hasil Penimbangan
                         </button>
                     </form>
                 </div>

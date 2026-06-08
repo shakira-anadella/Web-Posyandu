@@ -25,10 +25,6 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('balita_id');
 
-        // ==========================================
-        // 📊 PROSES REKAPITULASI DATA UNTUK 3 GRAFIK
-        // ==========================================
-
         // --- A. Rekap Indikator BB/U ---
         $kelasBBU = ['Sangat Kurang', 'Kurang', 'Normal', 'Risiko BB Lebih'];
         $mapBBU = array_fill_keys($kelasBBU, 0);
@@ -62,9 +58,6 @@ class DashboardController extends Controller
         $bbtbLabels = array_keys($mapBBTB);
         $bbtbValues = array_values($mapBBTB);
 
-        // ==========================================
-        // 📋 PEMETAAN DATA UNTUK TABEL DAFTAR BALITA
-        // ==========================================
         $balitas = Balita::orderBy('nama_balita')->get();
 
         foreach ($balitas as $b) {
