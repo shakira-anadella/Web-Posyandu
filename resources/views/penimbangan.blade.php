@@ -110,7 +110,7 @@
                 <div class="mt-5 rounded-2xl border border-slate-200 bg-white p-5 space-y-4 shadow-sm">
                     <div class="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-2">
                         <span class="flex h-2 w-2 rounded-full bg-green-500"></span>
-                        Hasil Klasifikasi Otak AI XGBoost (Optimasi Bayesian)
+                        Hasil Klasifikasi XGBoost 
                     </div>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">

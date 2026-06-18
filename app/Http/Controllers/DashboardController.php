@@ -26,7 +26,7 @@ class DashboardController extends Controller
             ->keyBy('balita_id');
 
         // --- A. Rekap Indikator BB/U ---
-        $kelasBBU = ['Sangat Kurang', 'Kurang', 'Normal', 'Risiko BB Lebih'];
+        $kelasBBU = ['Sangat Kurang', 'Kurang', 'Normal', 'Risiko Lebih'];
         $mapBBU = array_fill_keys($kelasBBU, 0);
         foreach ($latestRows as $row) {
             if ($row->status_bbu && isset($mapBBU[$row->status_bbu])) {

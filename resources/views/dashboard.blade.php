@@ -47,7 +47,7 @@
         <!-- Sisi Kanan: Grafik Distribusi Gizi Balita -->
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 lg:col-span-2 h-full">
             <div class="mb-6">
-                <div class="text-sm font-semibold text-black">Sebaran Status Gizi Balita (XGBoost)</div>
+                <div class="text-sm font-semibold text-black">Sebaran Status Gizi Balita</div>
                 <div class="text-xs text-slate-500">Berdasarkan data penimbangan terakhir tiap balita di Posyandu Durian 14A</div>
             </div>
 

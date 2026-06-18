@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@yield('title', 'Posyandu')</title>
     @vite(['resources/css/app.css','resources/js/app.js'])
+    
+    <link rel="icon" type="image/png" href="{{ asset('Logo.png') }}">
 </head>
 <body class="bg-slate-50 text-slate-900">
 
@@ -12,12 +14,12 @@
     <header class="bg-white border-b border-slate-200">
         <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
 
-            <!-- Logo -->
             <div class="flex items-center gap-3">
-                <div class="h-9 w-9 rounded-xl bg-blue-600"></div>
+                <img src="/Logo.png" alt="Logo Posyandu" class="h-9 w-9 object-contain" />
+                
                 <div class="leading-tight">
                     <div class="font-semibold">POSYANDU</div>
-                    <div class="text-xs text-slate-500">Sistem Monitoring Gizi</div>
+                    <div class="text-xs text-slate-500">Sistem Monitoring Status Gizi Balita</div>
                 </div>
             </div>
 
