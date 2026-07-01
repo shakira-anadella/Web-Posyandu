@@ -19,7 +19,6 @@ return new class extends Migration
             $table->decimal('berat_badan', 5, 2);
             $table->decimal('tinggi_badan', 5, 2);
             
-            // Masukkan 3 kolom baru Random Forest di sini langsung
             $table->string('status_bbu', 50)->nullable();
             $table->string('status_tbu', 50)->nullable();
             $table->string('status_bbtb', 50)->nullable();
