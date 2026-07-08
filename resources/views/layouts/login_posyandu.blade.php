@@ -11,7 +11,6 @@
     <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
         <div class="text-center mb-6">
             <h2 class="text-2xl font-bold text-slate-800 uppercase tracking-wide">Posyandu Durian 14A</h2>
-            <p class="text-sm text-slate-500 mt-1">Sistem Prediksi Status Gizi Balita (XGBoost)</p>
         </div>
 
         @if(session('error_login'))

@@ -50,13 +50,6 @@
             {{ request()->is('balita*') ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-600 hover:text-slate-900' }}">
                 Data Balita
             </a>
-
-            <a href="{{ url('/laporan/bulanan') }}" target="_blank"
-            class="py-3 text-sm font-medium border-b-2 
-            {{ request()->is('laporan/bulanan*') ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-600 hover:text-slate-900' }}">
-                Laporan Bulanan
-            </a>
-
         </div>
     </nav>
 

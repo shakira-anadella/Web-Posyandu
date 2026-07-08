@@ -9,7 +9,6 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6 items-stretch">
 
-        <!-- FIX: Sisi kiri menggunakan Flexbox Row menyamping agar tidak menyisakan ruang kosong vertikal yang aneh -->
         <div class="lg:col-span-1 flex flex-col gap-4 justify-between h-full">
             <!-- Kartu Total Balita -->
             <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex-1 flex items-center justify-between">
@@ -64,7 +63,7 @@
                             <div class="text-[9px] text-slate-400 mt-0.5">Anak</div>
                         </div>
                     </div>
-                    <!-- FIX: Keterangan Legenda BB/U Sejajar Vertikal Rapi -->
+                   
                     <div class="w-full max-w-[140px] mx-auto space-y-1 text-[11px]">
                         @foreach($bbuLabels ?? [] as $idx => $lbl)
                             <div class="grid grid-cols-12 items-center text-slate-600 border-b border-dashed border-slate-100 pb-0.5 last:border-0">
@@ -90,7 +89,7 @@
                             <div class="text-[9px] text-slate-400 mt-0.5">Anak</div>
                         </div>
                     </div>
-                    <!-- FIX: Keterangan Legenda TB/U Sejajar Vertikal Rapi -->
+                    
                     <div class="w-full max-w-[140px] mx-auto space-y-1 text-[11px]">
                         @foreach($tbuLabels ?? [] as $idx => $lbl)
                             <div class="grid grid-cols-12 items-center text-slate-600 border-b border-dashed border-slate-100 pb-0.5 last:border-0">
@@ -116,7 +115,7 @@
                             <div class="text-[9px] text-slate-400 mt-0.5">Anak</div>
                         </div>
                     </div>
-                    <!-- FIX: Keterangan Legenda BB/TB Sejajar Vertikal Rapi -->
+                    
                     <div class="w-full max-w-[140px] mx-auto space-y-1 text-[11px]">
                         @foreach($bbtbLabels ?? [] as $idx => $lbl)
                             <div class="grid grid-cols-12 items-center text-slate-600 border-b border-dashed border-slate-100 pb-0.5 last:border-0">
@@ -234,7 +233,6 @@
             });
         }
 
-        // 2. Logika Render Donut Chart
         const renderDonut = (canvasId, colors) => {
             const ctx = document.getElementById(canvasId);
             if (!ctx) return;

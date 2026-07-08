@@ -135,19 +135,4 @@ class PenimbanganController extends Controller
 
         return redirect(url('/balita/'.$id.'/timbang'))->with('success', 'Data penimbangan dan status gizi berhasil disimpan.');
     }
-
-    public function cetakBulanan(Request $request)
-    {
-        $bulan = $request->input('bulan', date('m'));
-        $tahun = $request->input('tahun', date('Y'));
-
-        $riwayat = Penimbangan::with('balita')
-            ->whereYear('tanggal_penimbangan', $tahun)
-            ->whereMonth('tanggal_penimbangan', $bulan)
-            ->get();
-
-        $nama_bulan = \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F');
-
-        return view('cetak_bulanan', compact('riwayat', 'nama_bulan', 'bulan', 'tahun'));
-    }
 }

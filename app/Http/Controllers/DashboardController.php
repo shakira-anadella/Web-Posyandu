@@ -65,9 +65,9 @@ class DashboardController extends Controller
 
             $b->tgl_terakhir = $p?->tanggal_penimbangan;
             $b->umur_terakhir = $p?->umur_bulan;
-            $b->status_bbu = $p?->status_bbu;   // Status Berat Badan
-            $b->status_tbu = $p?->status_tbu;   // Status Tinggi Badan (Stunting)
-            $b->status_bbtb = $p?->status_bbtb; // Status Nutrisi klinis
+            $b->status_bbu = $p?->status_bbu;   
+            $b->status_tbu = $p?->status_tbu;  
+            $b->status_bbtb = $p?->status_bbtb; 
         }
 
         return view('dashboard', compact(

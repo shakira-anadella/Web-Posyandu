@@ -29,7 +29,6 @@ Route::middleware(['web'])->group(function () {
         Route::get('/balita/{id}/timbang', [PenimbanganController::class, 'form']);
         Route::post('/balita/{id}/prediksi', [PenimbanganController::class, 'prediksi']);
         Route::post('/balita/{id}/simpan', [PenimbanganController::class, 'simpan']);
-        Route::get('/laporan/bulanan', [PenimbanganController::class, 'cetakBulanan']);
         
     });
 });
